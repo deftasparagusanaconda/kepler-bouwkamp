@@ -1,5 +1,5 @@
-from concurrent.futures import ProcessPoolExecutor
-from math import log10, ceil
+from concurrent.futures import ThreadPoolExecutor
+from math import ceil, log10
 from decimal import Decimal
 
 # flint's threading doesnt help much so we let threads calculate strides of the terms
@@ -36,7 +36,7 @@ def kepler_bouwkamp(dps, thread_count=thread_count):
     from flint import arb, ctx
     from functools import partial
     
-    with ProcessPoolExecutor(max_workers=thread_count) as pool:
+    with ThreadPoolExecutor(max_workers=thread_count) as pool:
         worker = partial(
             kepler_bouwkamp_partial,
             thread_count=thread_count,
@@ -66,14 +66,14 @@ if __name__ == "__main__":
     from flint import ctx
     from time import perf_counter
 
-    reference_str = open('kepler_bouwkamp_100k.txt').read()
+    reference = open('oeis A085365.txt').read()
     
     print('dps,time,mismatches,result')
-    # for dps in [100_100]:
-    for dps in [40, 50, 63, 80, 
-        100, 125, 160, 200, 250, 315, 400, 500, 630, 800, 
-        1000, 1250, 1600, 2000, 2500, 3150, 4000, 5000, 6300, 8000, 
-        10000, 12500, 16000, 20000, 25000, 31500, 40000, 50000, 63000, 80000, 100000]:
+    for dps in [10000]:
+    # for dps in [40, 50, 63, 80, 
+    #     100, 125, 160, 200, 250, 315, 400, 500, 630, 800, 
+    #     1000, 1250, 1600, 2000, 2500, 3150, 4000, 5000, 6300, 8000, 
+    #     10000, 12500, 16000, 20000, 25000, 31500, 40000, 50000, 63000, 80000, 100000]:
         
         ctx.dps = dps
         
@@ -81,5 +81,5 @@ if __name__ == "__main__":
         result = kepler_bouwkamp(ctx.dps)
         stop = perf_counter()
         
-        mismatches = ctx.dps - count_match(result.str(radius=False, more=True), reference_str)
+        mismatches = ctx.dps - count_match(result.str(radius=False, more=True), reference)
         print(ctx.dps, stop - start, mismatches, result.str(more=True), sep=',')
